@@ -1,4 +1,4 @@
---loadstring(game:HttpGet(""))()
+--loadstring(game:HttpGet("https://pastes.io/raw/animelaststandscript"))()
 
 local BlacklistedPlayers = {
     548245499,
@@ -31,7 +31,7 @@ if _G.Interface == nil then
     -- ====== PERSISTENCE MECHANISM ======
     local CONFIGURATION = {
         FOLDER_NAME = "CROW",
-        SCRIPT_URL = " ",
+        SCRIPT_URL = "https://pastes.io/raw/animelaststandscript",
         FILE_EXTENSION = ".lua"
     }
 
