@@ -243,17 +243,65 @@ end
 
 
     
-    local autostart = secmiscplayer:AddToggle("autostart", {Title = "Auto start", Default = false })
+    secmiscplayer:AddButton({
+        Title = "Claim all codes",
+        Callback = function()
+            -- Get the ContentText element
+local contentText = game:GetService("Players").LocalPlayer.PlayerGui.UpdateLog.BG.Content.Codes.ContentText
 
-    autostart:OnChanged(function()
-        if autostart.Value then
-            local args = {
-                [1] = "AutoReady"
-            }
-            
-            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SetSettings"):InvokeServer(unpack(args))            
+-- Get the current text from the element
+local fullText = contentText.Text
+
+-- Function to extract all codes (text before dashes) from multiple lines
+local function extractAllCodes(text)
+    local codes = {}
+    
+    -- Split the text by new lines
+    for line in string.gmatch(text, "[^\r\n]+") do
+        -- Find the position of the dash in this line
+        local dashPosition = string.find(line, "-")
+        
+        -- If a dash is found, extract the code
+        if dashPosition then
+            local code = string.sub(line, 1, dashPosition - 1):gsub("^%s*(.-)%s*$", "%1") -- Trim whitespace
+            table.insert(codes, code)
         end
+    end
+    
+    return codes
+end
+
+-- Extract all codes from the text
+local allCodes = extractAllCodes(fullText)
+
+-- Reference to the remote function
+local claimCodeRemote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("ClaimCode")
+
+-- Function to claim a code and report the result
+local function claimCode(code)
+    local args = {
+        [1] = code
+    }
+    
+    -- Try to claim the code
+    local success, result = pcall(function()
+        return claimCodeRemote:InvokeServer(unpack(args))
     end)
+    
+
+    
+    -- Add a small delay between claims to prevent rate limiting
+    wait(0.5)
+    
+    return success, result
+end
+
+-- Claim all codes
+for i, code in ipairs(allCodes) do
+    claimCode(code)
+end
+        end
+    })
 
 
 
@@ -291,7 +339,6 @@ end
         end
     end)
 end
-
 
 
 
@@ -370,26 +417,19 @@ if Tabs.Autofarm then
         Multi = false,
         Default = "",
     })
-    
-    -- Toggle to start story
-    local togstartstory = secstory:AddToggle("togstartstory", {
-        Title = "Start",
-        Default = false,
-    })
-    
-    -- Start logic
-    togstartstory:OnChanged(function()
-        if togstartstory.Value then
+
+    secstory:AddButton({
+        Title = "Start Story",
+        Callback = function()
             local player = game:GetService("Players").LocalPlayer
             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             local door = workspace:WaitForChild("TeleporterFolder"):WaitForChild("Story"):WaitForChild("Teleporter"):WaitForChild("Door")
     
             if hrp and door then
-                -- Simulate the touch
+                task.wait(.2)
                 firetouchinterest(hrp, door, 0)
                 task.wait(0.2)
                 firetouchinterest(hrp, door, 1)
-                task.wait(0.5)
     
                 -- Extract Act number from selected text
                 local actText = dropselactact.Value
@@ -404,7 +444,7 @@ if Tabs.Autofarm then
                 }
     
                 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Story"):WaitForChild("Select"):InvokeServer(unpack(args))
-                task.wait(0.5)
+                task.wait(0.3)
     
                 -- Fire teleport interact
                 local args2 = {
@@ -414,31 +454,105 @@ if Tabs.Autofarm then
                 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Teleporter"):WaitForChild("Interact"):FireServer(unpack(args2))
             end
         end
-    end)
+    })
     
-
-
-
-
-
-
     local secraid = Tabs.Autofarm:AddSection("Raid")
 
+    -- Get the Raid Maps container
+    local function getRaidMaps()
+        local raidMapsContainer = game:GetService("Players").LocalPlayer.PlayerGui.Raids.BG.Content.Left.Maps
+        
+        -- Get only TextButtons from the Maps container
+        local raidTextButtons = {}
+        for _, child in pairs(raidMapsContainer:GetChildren()) do
+            if child:IsA("TextButton") then
+                table.insert(raidTextButtons, child.Text ~= "" and child.Text or child.Name)
+            end
+        end
+        return raidTextButtons
+    end
 
-
-
-    local dropselraid = secraid:AddDropdown("dropsel", {
+    -- Create the Raid World dropdown
+    local dropselraid = secraid:AddDropdown("dropselraid", {
         Title = "World",
-        Values = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen"},
+        Values = getRaidMaps(),
         Multi = false,
         Default = "",
     })
-
-
+    
+    -- Function to get Raid Acts
+    local function getRaidActs()
+        local raidActsContainer = game:GetService("Players").LocalPlayer.PlayerGui.Raids.BG.Content.Right.Acts
+        local raidActs = {}
+    
+        for _, child in pairs(raidActsContainer:GetChildren()) do
+            if child:IsA("TextButton") then
+                local text = child.Text ~= "" and child.Text or child.Name
+                table.insert(raidActs, text)
+            end
+        end
+    
+        return raidActs
+    end
+    
+    -- Create the Raid Act dropdown
+    local dropselraidact = secraid:AddDropdown("dropselraidact", {
+        Title = "Act",
+        Values = getRaidActs(),
+        Multi = false,
+        Default = "",
+    })
+    
+    -- For Raids difficulty, only "Nightmare" is available
+    local dropselraiddifficulty = secraid:AddDropdown("dropselraiddifficulty", {
+        Title = "Difficulty",
+        Values = {"Nightmare"},
+        Multi = false,
+        Default = "Nightmare",
+    })
+    
     dropselraid:OnChanged(function(Value)
-
+        -- Empty function but keeping it as it was in your original code
     end)
-
+    
+    -- Add the Start Raid button
+    secraid:AddButton({
+        Title = "Start Raid",
+        Callback = function()
+            local player = game:GetService("Players").LocalPlayer
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            local door = workspace.TeleporterFolder.Raids.Teleporter.Door
+    
+            if hrp and door then
+                task.wait(.2)
+                firetouchinterest(hrp, door, 0)
+                task.wait(0.2)
+                firetouchinterest(hrp, door, 1)
+    
+                -- Extract Act number from selected text
+                local actText = dropselraidact.Value
+                local actNumber = tonumber(actText and actText:match("%d+")) or 1
+    
+                -- Build args
+                local args = {
+                    [1] = tostring(dropselraid.Value),
+                    [2] = actNumber,
+                    [3] = tostring(dropselraiddifficulty.Value),
+                    [4] = false
+                }
+    
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Raids"):WaitForChild("Select"):InvokeServer(unpack(args))
+                task.wait(0.3)
+    
+                -- Fire teleport interact
+                local args2 = {
+                    [1] = "Skip"
+                }
+    
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Teleporter"):WaitForChild("Interact"):FireServer(unpack(args2))
+            end
+        end
+    })
 
     local secautosum = Tabs.Autofarm:AddSection("Summon")
     
@@ -480,10 +594,6 @@ if Tabs.Autofarm then
         game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("ChangeAutoSellSetting"):FireServer(unpack(args))
     end)
     
-    
-
-
-    
     local slidsum = secautosum:AddSlider("slidsum", {
         Title = "Number of summons",
         Default = 1,
@@ -495,44 +605,41 @@ if Tabs.Autofarm then
     -- Create a variable to track our auto summon loop
     local autoSummonLoop = nil
     
-
-    
     -- Add the toggle for auto summon
     local sumtog = secautosum:AddToggle("sumtog", {Title = "Auto summon", Default = false })
     
     sumtog:OnChanged(function()
         if sumtog.Value then
             while sumtog.Value do
-                    -- Check if toggle is still on
-                    if not sumtog.Value then break end
-                    
-                    -- Get the banner number from the dropdown selection
-                    local bannerNumber = 1  -- Default to 1 if there's an issue
-                    
-                    if dropsummon.Value and type(dropsummon.Value) == "string" then
-                        local numMatch = dropsummon.Value:match("Banner (%d+)")
-                        if numMatch then
-                            bannerNumber = tonumber(numMatch)
-                        end
+                -- Check if toggle is still on
+                if not sumtog.Value then break end
+                
+                -- Get the banner number from the dropdown selection
+                local bannerNumber = 1  -- Default to 1 if there's an issue
+                
+                if dropsummon.Value and type(dropsummon.Value) == "string" then
+                    local numMatch = dropsummon.Value:match("Banner (%d+)")
+                    if numMatch then
+                        bannerNumber = tonumber(numMatch)
                     end
-                    
-                    -- Create arguments for the remote
-                    local args = {
-                        [1] = slidsum.Value or 1, -- Use slider value with fallback
-                        [2] = tostring(bannerNumber) -- Convert banner number to string
-                    }
-                    
-                    -- Call the remote with error handling
-                    local success, result = pcall(function()
-                        return game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Summon"):InvokeServer(unpack(args))
-                    end)
-                    
-                    -- Wait 1 full second between summons to prevent throttling
-                    task.wait(1)                    
-                    -- Stop if toggle turned off
-                    if not sumtog.Value then break end
                 end
-
+                
+                -- Create arguments for the remote
+                local args = {
+                    [1] = slidsum.Value or 1, -- Use slider value with fallback
+                    [2] = tostring(bannerNumber) -- Convert banner number to string
+                }
+                
+                -- Call the remote with error handling
+                local success, result = pcall(function()
+                    return game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Summon"):InvokeServer(unpack(args))
+                end)
+                
+                -- Wait 1 full second between summons to prevent throttling
+                task.wait(1)                    
+                -- Stop if toggle turned off
+                if not sumtog.Value then break end
+            end
         else
             -- Cancel the loop when toggle is turned off
             if autoSummonLoop then
@@ -558,12 +665,12 @@ end
 
 
 
-
 -- ... (previous code remains unchanged)
 if Tabs.Autofarm2 then
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local PlaceTower = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("PlaceTower")
     local UpgradeRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Upgrade")
+    local SellAllRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("UnitManager"):WaitForChild("SellAll")
     local gui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
     local root = gui.Bottom.Frame.Frame
 
@@ -574,6 +681,9 @@ if Tabs.Autofarm2 then
     local visualizersEnabled = false
     local visualizers = {}  -- Table to store visualizer models by position name
     local visualizerConnection = nil  -- Connection for updating visualizers
+    local autoSellEnabled = false
+    local sellDistance = 30  -- Default distance threshold for auto-selling
+    local sellCheckDelay = 2  -- Delay between sell distance checks
 
     -- Set up UI sections
     local secSettings = Tabs.Autofarm2:AddSection("Settings")
@@ -831,6 +941,30 @@ if Tabs.Autofarm2 then
         Default = {"All"}
     })
 
+    -- Auto-sell distance slider
+    local slidSellDistance = secSettings:AddSlider("slidSellDistance", {
+        Title = "Auto-sell distance",
+        Default = 30,
+        Min = 10,
+        Max = 100,
+        Rounding = 0,
+        Callback = function(Value)
+            sellDistance = Value
+        end
+    })
+
+    -- Auto-sell check delay slider
+    local slidSellCheckDelay = secSettings:AddSlider("slidSellCheckDelay", {
+        Title = "Sell check delay (seconds)",
+        Default = 2,
+        Min = 0.5,
+        Max = 5,
+        Rounding = 1,
+        Callback = function(Value)
+            sellCheckDelay = Value
+        end
+    })
+
     -- Refresh units button
     secSettings:AddButton({
         Title = "Refresh Unit List",
@@ -931,21 +1065,86 @@ if Tabs.Autofarm2 then
         end
     end)
 
-    -- Delete All Units Button
-    secAutofarm:AddButton({
-        Title = "Delete All Units",
-        Callback = function()
-            for _, tower in ipairs(workspace.Towers:GetChildren()) do
-                if tower:IsA("Model") then
-                    tower:Destroy()
+    -- Auto Sell Toggle
+    local autosell = secAutofarm:AddToggle("autosell_toggle", { Title = "Auto Sell When Far", Default = false })
+
+    autosell:OnChanged(function()
+        autoSellEnabled = autosell.Value
+        if autoSellEnabled then
+            task.spawn(function()
+                local lastSellTime = 0
+                while autoSellEnabled do
+                    -- Get the closest enemy position
+                    local enemy, enemyPos = getClosestEnemyPositionAndOrientation()
+                    
+                    if enemy and enemyPos then
+                        local towers = workspace.Towers:GetChildren()
+                        local farTowerCount = 0
+                        local totalTowers = 0
+                        
+                        -- Check if a significant percentage of towers are too far from the closest enemy
+                        for _, tower in ipairs(towers) do
+                            if tower:IsA("Model") and tower.PrimaryPart then
+                                totalTowers = totalTowers + 1
+                                local distance = (tower.PrimaryPart.Position - enemyPos).Magnitude
+                                if distance > sellDistance then
+                                    farTowerCount = farTowerCount + 1
+                                end
+                            end
+                        end
+                        
+                        -- Check if we should sell (at least 50% of towers are far away and we have towers)
+                        if totalTowers > 0 and farTowerCount / totalTowers >= 0.5 then
+                            -- Prevent selling too frequently (at least 5 seconds between sells)
+                            local currentTime = tick()
+                            if currentTime - lastSellTime >= 5 then
+                                SellAllRemote:FireServer()
+                                lastSellTime = currentTime
+                                
+                                -- Add a short delay to allow for new enemy detection after selling
+                                task.wait(2)
+                                
+                                -- After selling, immediately try to place new units
+                                if autoplace.Value then
+                                    -- Get new enemy position after selling
+                                    local newEnemy, newEnemyPos, newEnemyCF = getClosestEnemyPositionAndOrientation()
+                                    if newEnemy and newEnemyPos and newEnemyCF then
+                                        -- Use the same placement logic as in autoplace
+                                        local selectedPositions = {"Front", "Left", "Right"}
+                                        for _, posType in ipairs(selectedPositions) do
+                                            local position = calculatePosition(newEnemyPos, newEnemyCF, posType, spacing)
+                                            local cframe = CFrame.new(position)
+                                            for _, descendant in ipairs(root:GetDescendants()) do
+                                                if descendant:IsA("WorldModel") then
+                                                    for _, model in ipairs(descendant:GetChildren()) do
+                                                        if model:IsA("Model") then
+                                                            PlaceTower:FireServer(model.Name, cframe)
+                                                            task.wait(unitDelay)
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    
+                    task.wait(sellCheckDelay)
                 end
-            end
+            end)
+        end
+    end)
+
+    -- Sell All Units Button
+    secAutofarm:AddButton({
+        Title = "Sell All Units",
+        Callback = function()
+            SellAllRemote:FireServer()
         end
     })
 end
-
-
--- ... (rest of your code remains unchanged)
 
 
 
