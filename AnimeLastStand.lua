@@ -190,6 +190,12 @@ end
         humanoid.JumpPower = SliderJump.Value
     end)
 
+
+
+
+
+
+    if Tabs.Autofarm then
     local secmiscplayer = Tabs.Player:AddSection("Misc")
 
 
@@ -302,6 +308,8 @@ for i, code in ipairs(allCodes) do
 end
         end
     })
+
+end
 
 
 
