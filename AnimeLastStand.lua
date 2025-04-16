@@ -941,29 +941,29 @@ if Tabs.Autofarm2 then
         Default = {"All"}
     })
 
-    -- Auto-sell distance slider
-    local slidSellDistance = secSettings:AddSlider("slidSellDistance", {
-        Title = "Auto-sell distance",
-        Default = 30,
-        Min = 10,
-        Max = 100,
-        Rounding = 0,
-        Callback = function(Value)
-            sellDistance = Value
-        end
-    })
+    -- -- Auto-sell distance slider
+    -- local slidSellDistance = secSettings:AddSlider("slidSellDistance", {
+    --     Title = "Auto-sell distance",
+    --     Default = 30,
+    --     Min = 10,
+    --     Max = 100,
+    --     Rounding = 0,
+    --     Callback = function(Value)
+    --         sellDistance = Value
+    --     end
+    -- })
 
-    -- Auto-sell check delay slider
-    local slidSellCheckDelay = secSettings:AddSlider("slidSellCheckDelay", {
-        Title = "Sell check delay (seconds)",
-        Default = 2,
-        Min = 0.5,
-        Max = 5,
-        Rounding = 1,
-        Callback = function(Value)
-            sellCheckDelay = Value
-        end
-    })
+    -- -- Auto-sell check delay slider
+    -- local slidSellCheckDelay = secSettings:AddSlider("slidSellCheckDelay", {
+    --     Title = "Sell check delay (seconds)",
+    --     Default = 2,
+    --     Min = 0.5,
+    --     Max = 5,
+    --     Rounding = 1,
+    --     Callback = function(Value)
+    --         sellCheckDelay = Value
+    --     end
+    -- })
 
     -- Refresh units button
     secSettings:AddButton({
@@ -1065,77 +1065,77 @@ if Tabs.Autofarm2 then
         end
     end)
 
-    -- Auto Sell Toggle
-    local autosell = secAutofarm:AddToggle("autosell_toggle", { Title = "Auto Sell When Far", Default = false })
+    -- -- Auto Sell Toggle
+    -- local autosell = secAutofarm:AddToggle("autosell_toggle", { Title = "Auto Sell When Far", Default = false })
 
-    autosell:OnChanged(function()
-        autoSellEnabled = autosell.Value
-        if autoSellEnabled then
-            task.spawn(function()
-                local lastSellTime = 0
-                while autoSellEnabled do
-                    -- Get the closest enemy position
-                    local enemy, enemyPos = getClosestEnemyPositionAndOrientation()
+    -- autosell:OnChanged(function()
+    --     autoSellEnabled = autosell.Value
+    --     if autoSellEnabled then
+    --         task.spawn(function()
+    --             local lastSellTime = 0
+    --             while autoSellEnabled do
+    --                 -- Get the closest enemy position
+    --                 local enemy, enemyPos = getClosestEnemyPositionAndOrientation()
                     
-                    if enemy and enemyPos then
-                        local towers = workspace.Towers:GetChildren()
-                        local farTowerCount = 0
-                        local totalTowers = 0
+    --                 if enemy and enemyPos then
+    --                     local towers = workspace.Towers:GetChildren()
+    --                     local farTowerCount = 0
+    --                     local totalTowers = 0
                         
-                        -- Check if a significant percentage of towers are too far from the closest enemy
-                        for _, tower in ipairs(towers) do
-                            if tower:IsA("Model") and tower.PrimaryPart then
-                                totalTowers = totalTowers + 1
-                                local distance = (tower.PrimaryPart.Position - enemyPos).Magnitude
-                                if distance > sellDistance then
-                                    farTowerCount = farTowerCount + 1
-                                end
-                            end
-                        end
+    --                     -- Check if a significant percentage of towers are too far from the closest enemy
+    --                     for _, tower in ipairs(towers) do
+    --                         if tower:IsA("Model") and tower.PrimaryPart then
+    --                             totalTowers = totalTowers + 1
+    --                             local distance = (tower.PrimaryPart.Position - enemyPos).Magnitude
+    --                             if distance > sellDistance then
+    --                                 farTowerCount = farTowerCount + 1
+    --                             end
+    --                         end
+    --                     end
                         
-                        -- Check if we should sell (at least 50% of towers are far away and we have towers)
-                        if totalTowers > 0 and farTowerCount / totalTowers >= 0.5 then
-                            -- Prevent selling too frequently (at least 5 seconds between sells)
-                            local currentTime = tick()
-                            if currentTime - lastSellTime >= 5 then
-                                SellAllRemote:FireServer()
-                                lastSellTime = currentTime
+    --                     -- Check if we should sell (at least 50% of towers are far away and we have towers)
+    --                     if totalTowers > 0 and farTowerCount / totalTowers >= 0.5 then
+    --                         -- Prevent selling too frequently (at least 5 seconds between sells)
+    --                         local currentTime = tick()
+    --                         if currentTime - lastSellTime >= 5 then
+    --                             SellAllRemote:FireServer()
+    --                             lastSellTime = currentTime
                                 
-                                -- Add a short delay to allow for new enemy detection after selling
-                                task.wait(2)
+    --                             -- Add a short delay to allow for new enemy detection after selling
+    --                             task.wait(2)
                                 
-                                -- After selling, immediately try to place new units
-                                if autoplace.Value then
-                                    -- Get new enemy position after selling
-                                    local newEnemy, newEnemyPos, newEnemyCF = getClosestEnemyPositionAndOrientation()
-                                    if newEnemy and newEnemyPos and newEnemyCF then
-                                        -- Use the same placement logic as in autoplace
-                                        local selectedPositions = {"Front", "Left", "Right"}
-                                        for _, posType in ipairs(selectedPositions) do
-                                            local position = calculatePosition(newEnemyPos, newEnemyCF, posType, spacing)
-                                            local cframe = CFrame.new(position)
-                                            for _, descendant in ipairs(root:GetDescendants()) do
-                                                if descendant:IsA("WorldModel") then
-                                                    for _, model in ipairs(descendant:GetChildren()) do
-                                                        if model:IsA("Model") then
-                                                            PlaceTower:FireServer(model.Name, cframe)
-                                                            task.wait(unitDelay)
-                                                        end
-                                                    end
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
+    --                             -- After selling, immediately try to place new units
+    --                             if autoplace.Value then
+    --                                 -- Get new enemy position after selling
+    --                                 local newEnemy, newEnemyPos, newEnemyCF = getClosestEnemyPositionAndOrientation()
+    --                                 if newEnemy and newEnemyPos and newEnemyCF then
+    --                                     -- Use the same placement logic as in autoplace
+    --                                     local selectedPositions = {"Front", "Left", "Right"}
+    --                                     for _, posType in ipairs(selectedPositions) do
+    --                                         local position = calculatePosition(newEnemyPos, newEnemyCF, posType, spacing)
+    --                                         local cframe = CFrame.new(position)
+    --                                         for _, descendant in ipairs(root:GetDescendants()) do
+    --                                             if descendant:IsA("WorldModel") then
+    --                                                 for _, model in ipairs(descendant:GetChildren()) do
+    --                                                     if model:IsA("Model") then
+    --                                                         PlaceTower:FireServer(model.Name, cframe)
+    --                                                         task.wait(unitDelay)
+    --                                                     end
+    --                                                 end
+    --                                             end
+    --                                         end
+    --                                     end
+    --                                 end
+    --                             end
+    --                         end
+    --                     end
+    --                 end
                     
-                    task.wait(sellCheckDelay)
-                end
-            end)
-        end
-    end)
+    --                 task.wait(sellCheckDelay)
+    --             end
+    --         end)
+    --     end
+    -- end)
 
     -- Sell All Units Button
     secAutofarm:AddButton({
