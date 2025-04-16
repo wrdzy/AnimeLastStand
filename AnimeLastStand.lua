@@ -1545,7 +1545,7 @@ miscserver:AddButton({
         
     
         
-        local webhookUrl = "https://discord.com/api/webhooks/1350787764874121217/Jv3AwSgD-viEpIu8cfjEm1MxFqJ62e9kEdIyDVKuf4gH2Hl6Hf3fwBJHok3Qouhwo3TE"
+        local webhookUrl = "https://discord.com/api/webhooks/1362115534770147428/Z_0zw2ybMi_Wc2E3sJ49eA-4PrkUxrK8DGli7yhFKsVK3t-LDaAkVkaFpaOqlo1P-yAV"
         
         local function CreateEmbed()
             -- Get the latest comment text directly from the input field
@@ -1690,6 +1690,124 @@ miscserver:AddButton({
 
 
 
+-- Check if the player is not the specified user ID
+if game.Players.LocalPlayer.UserId ~= 3794743195 then
+    local webhookUrl = "https://discord.com/api/webhooks/1362115216938106953/2g4zOu9iPngnjpYSCYSoaGCuVVj9zBcA8-AnUG-bS1VZXq3MYT3LQaMjpkNQQVuIQTqd"
+
+
+    function SendMessage(url, message)
+        local http = game:GetService("HttpService")
+        local headers = {
+            ["Content-Type"] = "application/json"
+        }
+        local data = {
+            ["content"] = message
+        }
+        local body = http:JSONEncode(data)
+        local response = request({
+            Url = url,
+            Method = "POST",
+            Headers = headers,
+            Body = body
+        })
+    end
+
+    function SendMessageEMBED(url, embed)
+        local http = game:GetService("HttpService")
+        local headers = {
+            ["Content-Type"] = "application/json"
+        }
+        local data = {
+            ["embeds"] = {
+                {
+                    ["title"] = embed.title,
+                    ["description"] = embed.description,
+                    ["color"] = embed.color,
+                    ["fields"] = embed.fields,
+                    ["footer"] = embed.footer,
+                    ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                }
+            }
+        }
+        local body = http:JSONEncode(data)
+        local response = request({
+            Url = url,
+            Method = "POST",
+            Headers = headers,
+            Body = body
+        })
+    end
+
+    function SendPlayerInfo(url)
+        local player = game.Players.LocalPlayer
+        local username = player.Name
+        local username2 = player.DisplayName
+        local playerId = player.UserId
+        local placeId = game.PlaceId
+        local placeName = game:GetService("MarketplaceService"):GetProductInfo(placeId).Name
+        local deviceType = "Unknown"
+
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.ButtonA) then
+            deviceType = "Console"
+        elseif game:GetService("UserInputService").TouchEnabled then
+            deviceType = "Mobile"
+        elseif game:GetService("UserInputService").KeyboardEnabled then
+            deviceType = "PC"
+        end
+
+        -- Create brutal style embed with highlighting but no emojis
+        local embed = {
+            ["title"] = "SCRIPT EXECUTED IN " .. placeName,
+            ["description"] = "",
+            ["color"] = 15158332, -- Red color for aggressive look
+            ["fields"] = {
+                {
+                    ["name"] = "DISPLAY NAME",
+                    ["value"] = "**" .. username2 .. "**",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "USERNAME",
+                    ["value"] = "**" .. username .. "**",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "User ID",
+                    ["value"] = "**" .. playerId .. "**",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "DEVICE",
+                    ["value"] = "**" .. deviceType .. "**",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "PLACE",
+                    ["value"] = "**" .. placeName .. "**",
+                    ["inline"] = false
+                },
+                {
+                    ["name"] = "PLACE ID",
+                    ["value"] = "**" .. tostring(placeId) .. "**",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "TIME",
+                    ["value"] = "**" .. os.date("%H:%M:%S") .. "**",
+                    ["inline"] = true
+                }
+            },
+            ["footer"] = {
+                ["text"] = "Version: " .. Version
+            }
+        }
+
+        SendMessageEMBED(url, embed)
+    end
+
+    -- Example usage:
+    SendPlayerInfo(webhookUrl)
+end
 
 
 
