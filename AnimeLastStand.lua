@@ -26,7 +26,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 local Version = "1.0.5"
 
 if _G.Interface == nil then
-    -- _G.Interface = true
+    _G.Interface = true
     
     -- ====== PERSISTENCE MECHANISM ======
     local CONFIGURATION = {
