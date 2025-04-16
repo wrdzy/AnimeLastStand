@@ -559,6 +559,8 @@ end
 
 
 
+-- ... (previous code remains unchanged)
+
 if Tabs.Autofarm2 then
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local PlaceTower = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("PlaceTower")
@@ -571,7 +573,7 @@ if Tabs.Autofarm2 then
     local upgradeDelay = 5
     local spacing = 2  -- Default spacing/offset
     local visualizersEnabled = false
-    local visualizers = {}  -- Table to store visualizer parts
+    local visualizers = {}  -- Table to store visualizer models by position name
     local visualizerConnection = nil  -- Connection for updating visualizers
 
     -- Set up UI sections
@@ -608,23 +610,21 @@ if Tabs.Autofarm2 then
         end
     })
 
-    -- Enhanced: Include all supported positions in the dropdown
     local supportedPositions = {"Front", "Left", "Right"}
     local droppospla = secSettings:AddDropdown("droppospla", {
         Title = "Unit Position",
         Values = supportedPositions,
         Multi = true,
-        Default = 1, 2, 3
+        Default = {"Front", "Left", "Right"}
     })
 
-    -- Defensive helper to get selected positions (always returns at least {"Front"})
     local function getSelectedPositions()
         if droppospla and droppospla.Value and type(droppospla.Value) == "table" and #droppospla.Value > 0 then
             return droppospla.Value
         end
+        return {"Front"}
     end
 
-    -- Function to get the closest enemy position and orientation
     function getClosestEnemyPositionAndOrientation()
         local closestEnemy = nil
         local closestDistance = math.huge
@@ -653,7 +653,6 @@ if Tabs.Autofarm2 then
         return closestEnemy, enemyPosition, enemyOrientation
     end
 
-    -- Function to calculate position based on direction
     function calculatePosition(enemyPos, enemyCF, positionType, currentSpacing)
         local position = enemyPos
 
@@ -668,14 +667,13 @@ if Tabs.Autofarm2 then
         return Vector3.new(position.X, enemyPos.Y, position.Z)
     end
 
-    -- Function to clean up visualizers
     function cleanupVisualizers()
         if visualizerConnection then
             visualizerConnection:Disconnect()
             visualizerConnection = nil
         end
 
-        for _, visualizer in ipairs(visualizers) do
+        for _, visualizer in pairs(visualizers) do
             if visualizer and visualizer.Parent then
                 visualizer:Destroy()
             end
@@ -683,21 +681,15 @@ if Tabs.Autofarm2 then
         visualizers = {}
     end
 
-    -- Function to create/update visualizers
     function createVisualizers(enemyPos, enemyCF)
-        -- Clear any existing visualizers
-        for _, visualizer in ipairs(visualizers) do
-            if visualizer and visualizer.Parent then
-                visualizer:Destroy()
-            end
+        -- Clean up old visualizers
+        for _, v in pairs(visualizers) do
+            if v and v.Parent then v:Destroy() end
         end
         visualizers = {}
 
-        if not visualizersEnabled then
-            return
-        end
+        if not visualizersEnabled then return end
 
-        -- If no enemy detected, use a default position
         if not enemyPos or not enemyCF then
             local player = game:GetService("Players").LocalPlayer
             if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -710,7 +702,6 @@ if Tabs.Autofarm2 then
         end
 
         local selectedPositions = getSelectedPositions()
-
         local positionColors = {
             Front = Color3.fromRGB(0, 255, 255),
             Left = Color3.fromRGB(0, 255, 0),
@@ -719,7 +710,6 @@ if Tabs.Autofarm2 then
 
         for _, pos in ipairs(selectedPositions) do
             local position = calculatePosition(enemyPos, enemyCF, pos, spacing)
-
             local model = Instance.new("Model")
             model.Name = "Visualizer_" .. pos
 
@@ -786,11 +776,11 @@ if Tabs.Autofarm2 then
             particles.Parent = attachment
 
             model.Parent = workspace
-            table.insert(visualizers, model)
+            visualizers[pos] = model
         end
 
-        -- Create connection to continuously update visualizers
-        if #visualizers > 0 and not visualizerConnection then
+        -- Heartbeat connection for updating positions
+        if not visualizerConnection then
             visualizerConnection = game:GetService("RunService").Heartbeat:Connect(function()
                 if not visualizersEnabled then
                     if visualizerConnection then
@@ -803,20 +793,14 @@ if Tabs.Autofarm2 then
                 local _, newEnemyPos, newEnemyCF = getClosestEnemyPositionAndOrientation()
                 if newEnemyPos and newEnemyCF then
                     local selectedPositions = getSelectedPositions()
-                    for i, visualizer in ipairs(visualizers) do
-                        if visualizer and visualizer.Parent then
-                            if i <= #selectedPositions then
-                                local posType = selectedPositions[i]
-                                local newPosition = calculatePosition(newEnemyPos, newEnemyCF, posType, spacing)
-                                local dot = visualizer:FindFirstChild("Dot_" .. posType)
-                                if dot then
-                                    dot.Position = newPosition
-                                end
-                                local zone = visualizer:FindFirstChild("Zone_" .. posType)
-                                if zone then
-                                    zone.Position = newPosition
-                                end
-                            end
+                    for _, posType in ipairs(selectedPositions) do
+                        local model = visualizers[posType]
+                        if model and model.Parent then
+                            local newPosition = calculatePosition(newEnemyPos, newEnemyCF, posType, spacing)
+                            local dot = model:FindFirstChild("Dot_" .. posType)
+                            if dot then dot.Position = newPosition end
+                            local zone = model:FindFirstChild("Zone_" .. posType)
+                            if zone then zone.Position = newPosition end
                         end
                     end
                 end
@@ -858,7 +842,7 @@ if Tabs.Autofarm2 then
         Title = "Units to upgrade",
         Values = unitNames,
         Multi = true,
-        Default = 1
+        Default = {"All"}
     })
 
     -- Refresh units button
@@ -907,17 +891,17 @@ if Tabs.Autofarm2 then
                     if enemyPos and enemyCF then
                         local selectedPositions = getSelectedPositions()
                         if #selectedPositions > 0 then
-                            local randomPosIndex = math.random(1, #selectedPositions)
-                            local chosenPosition = selectedPositions[randomPosIndex]
-                            local position = calculatePosition(enemyPos, enemyCF, chosenPosition, spacing)
-                            local cframe = CFrame.new(position)
-                            for _, descendant in ipairs(root:GetDescendants()) do
-                                if descendant:IsA("WorldModel") then
-                                    for _, model in ipairs(descendant:GetChildren()) do
-                                        if model:IsA("Model") then
-                                            local modelName = model.Name
-                                            PlaceTower:FireServer(modelName, cframe)
-                                            task.wait(unitDelay)
+                            for _, posType in ipairs(selectedPositions) do
+                                local position = calculatePosition(enemyPos, enemyCF, posType, spacing)
+                                local cframe = CFrame.new(position)
+                                for _, descendant in ipairs(root:GetDescendants()) do
+                                    if descendant:IsA("WorldModel") then
+                                        for _, model in ipairs(descendant:GetChildren()) do
+                                            if model:IsA("Model") then
+                                                local modelName = model.Name
+                                                PlaceTower:FireServer(modelName, cframe)
+                                                task.wait(unitDelay)
+                                            end
                                         end
                                     end
                                 end
@@ -981,6 +965,9 @@ if Tabs.Autofarm2 then
         end
     })
 end
+
+-- ... (rest of your code remains unchanged)
+
 
 
 
