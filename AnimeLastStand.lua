@@ -101,7 +101,6 @@ if root then
     end
 end
 
-Tabs.ESP = Window:AddTab({ Title = "ESP", Icon = "eye" })
 Tabs.server = Window:AddTab({ Title = "Server", Icon = "server" })
 Tabs.Credits = Window:AddTab({ Title = "Credits", Icon = "book" })
 Tabs.UpdateLogs = Window:AddTab({ Title = "Update Logs", Icon = "scroll" })
