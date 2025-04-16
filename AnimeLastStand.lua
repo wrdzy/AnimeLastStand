@@ -560,7 +560,6 @@ end
 
 
 -- ... (previous code remains unchanged)
-
 if Tabs.Autofarm2 then
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local PlaceTower = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("PlaceTower")
@@ -610,20 +609,7 @@ if Tabs.Autofarm2 then
         end
     })
 
-    local supportedPositions = {"Front", "Left", "Right"}
-    local droppospla = secSettings:AddDropdown("droppospla", {
-        Title = "Unit Position",
-        Values = supportedPositions,
-        Multi = true,
-        Default = {"Front", "Left", "Right"}
-    })
-
-    local function getSelectedPositions()
-        if droppospla and droppospla.Value and type(droppospla.Value) == "table" and #droppospla.Value > 0 then
-            return droppospla.Value
-        end
-        return {"Front"}
-    end
+    -- Removed position dropdown section
 
     function getClosestEnemyPositionAndOrientation()
         local closestEnemy = nil
@@ -701,7 +687,7 @@ if Tabs.Autofarm2 then
             end
         end
 
-        local selectedPositions = getSelectedPositions()
+        local selectedPositions = {"Front", "Left", "Right"}  -- Default positions
         local positionColors = {
             Front = Color3.fromRGB(0, 255, 255),
             Left = Color3.fromRGB(0, 255, 0),
@@ -792,7 +778,7 @@ if Tabs.Autofarm2 then
 
                 local _, newEnemyPos, newEnemyCF = getClosestEnemyPositionAndOrientation()
                 if newEnemyPos and newEnemyCF then
-                    local selectedPositions = getSelectedPositions()
+                    local selectedPositions = {"Front", "Left", "Right"}
                     for _, posType in ipairs(selectedPositions) do
                         local model = visualizers[posType]
                         if model and model.Parent then
@@ -870,14 +856,6 @@ if Tabs.Autofarm2 then
         end
     end)
 
-    -- Update visualizers when positions dropdown changes
-    droppospla:OnChanged(function()
-        if visualizersEnabled then
-            local _, enemyPos, enemyCF = getClosestEnemyPositionAndOrientation()
-            createVisualizers(enemyPos, enemyCF)
-        end
-    end)
-
     -- ==================== AUTOFARM SECTION ====================
 
     -- Auto Place Toggle
@@ -889,7 +867,7 @@ if Tabs.Autofarm2 then
                 while autoplace.Value do
                     local _, enemyPos, enemyCF = getClosestEnemyPositionAndOrientation()
                     if enemyPos and enemyCF then
-                        local selectedPositions = getSelectedPositions()
+                        local selectedPositions = {"Front", "Left", "Right"} -- Default positions
                         if #selectedPositions > 0 then
                             for _, posType in ipairs(selectedPositions) do
                                 local position = calculatePosition(enemyPos, enemyCF, posType, spacing)
@@ -965,6 +943,7 @@ if Tabs.Autofarm2 then
         end
     })
 end
+
 
 -- ... (rest of your code remains unchanged)
 
