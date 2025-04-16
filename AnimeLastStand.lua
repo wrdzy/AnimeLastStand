@@ -614,7 +614,7 @@ if Tabs.Autofarm2 then
         Title = "Unit Position",
         Values = supportedPositions,
         Multi = true,
-        Default = {"Front", "Left", "Right"}
+        Default = 1, 2, 3
     })
 
     -- Defensive helper to get selected positions (always returns at least {"Front"})
@@ -622,8 +622,6 @@ if Tabs.Autofarm2 then
         if droppospla and droppospla.Value and type(droppospla.Value) == "table" and #droppospla.Value > 0 then
             return droppospla.Value
         end
-        -- Fallback to "Front" if nothing is selected
-        return {"Front"}
     end
 
     -- Function to get the closest enemy position and orientation
@@ -860,7 +858,7 @@ if Tabs.Autofarm2 then
         Title = "Units to upgrade",
         Values = unitNames,
         Multi = true,
-        Default = {"All"}
+        Default = 1
     })
 
     -- Refresh units button
