@@ -572,35 +572,7 @@ if Tabs.Autofarm then
         Default = "" -- Set default to avoid nil errors
     })
 
-    local dropsumsell = secautosum:AddDropdown("dropsumsell", {
-        Title = "Auto Sell",
-        Values = {"Rare", "Epic", "Legendary", "Mythic"},
-        Multi = true,
-        Default = {} -- Set default to avoid nil errors, empty table for no selections
-    })
-    
-    dropsumsell:SetValue({
-        Rare = true, -- Default selected values, set to true for selected ones
-        Epic = false, -- Set to true or false based on default choices
-    })
-    
-    dropsumsell:OnChanged(function(Value)
-        local selectedValues = {}
-        for value, state in next, Value do
-            if state then
-                table.insert(selectedValues, value) -- Collect selected values
-            end
-        end
-    
-        -- If values have changed, send the event again
-        local args = {
-            [1] = "1",  -- Adjust this argument if necessary
-            [2] = table.concat(selectedValues, ", ")  -- Concatenate selected values into a string
-        }
-    
-        -- Send the request to change the auto-sell setting
-        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("ChangeAutoSellSetting"):FireServer(unpack(args))
-    end)
+
     
     local slidsum = secautosum:AddSlider("slidsum", {
         Title = "Number of summons",
