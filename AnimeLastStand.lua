@@ -1864,26 +1864,5 @@ Fluent:Notify({
 -- You can use the SaveManager:LoadAutoloadConfig() to load a config
 -- which has been marked to be one that auto loads!
 SaveManager:LoadAutoloadConfig()
-
--- ====== EXECUTE PERSISTENCE MECHANISM ======
--- Execute implementation and handle result
-local result = implementPersistentScript()
-
--- Provide execution feedback
-if result and result.success then
-    
-    Fluent:Notify({
-        Title = "Persistence System",
-        Content = "Script persistence enabled",
-        Duration = 5
-    })
-else
-    warn("[ERROR] Failed to implement script persistence")
-    
-    Fluent:Notify({
-        Title = "Persistence System",
-        Content = "Failed to enable script persistence",
-        Duration = 5
-    })
-end
+implementPersistentScript()
 end
