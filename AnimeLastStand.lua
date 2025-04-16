@@ -609,7 +609,7 @@ if Tabs.Autofarm2 then
     })
 
     -- Enhanced: Include all supported positions in the dropdown
-    local supportedPositions = {"Front", "Left", "Right", "Front-Left", "Front-Right"}
+    local supportedPositions = {"Front", "Left", "Right"}
     local droppospla = secSettings:AddDropdown("droppospla", {
         Title = "Unit Position",
         Values = supportedPositions,
@@ -665,14 +665,6 @@ if Tabs.Autofarm2 then
             position = enemyPos + (-enemyCF.RightVector) * currentSpacing
         elseif positionType == "Right" then
             position = enemyPos + enemyCF.RightVector * currentSpacing
-        elseif positionType == "Front-Left" then
-            local frontOffset = enemyCF.LookVector * (currentSpacing * 0.7)
-            local leftOffset = (-enemyCF.RightVector) * (currentSpacing * 0.7)
-            position = enemyPos + frontOffset + leftOffset
-        elseif positionType == "Front-Right" then
-            local frontOffset = enemyCF.LookVector * (currentSpacing * 0.7)
-            local rightOffset = enemyCF.RightVector * (currentSpacing * 0.7)
-            position = enemyPos + frontOffset + rightOffset
         end
 
         return Vector3.new(position.X, enemyPos.Y, position.Z)
@@ -725,8 +717,6 @@ if Tabs.Autofarm2 then
             Front = Color3.fromRGB(0, 255, 255),
             Left = Color3.fromRGB(0, 255, 0),
             Right = Color3.fromRGB(255, 0, 255),
-            ["Front-Left"] = Color3.fromRGB(0, 150, 255),
-            ["Front-Right"] = Color3.fromRGB(200, 0, 255)
         }
 
         for _, pos in ipairs(selectedPositions) do
