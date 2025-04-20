@@ -1,4 +1,4 @@
---loadstring(game:HttpGet("https://pastes.io/raw/animelaststandscript"))()
+--loadstring(game:HttpGet("https://pastebin.com/raw/ifhvK1YU"))()
 
 local BlacklistedPlayers = {
     548245499,
